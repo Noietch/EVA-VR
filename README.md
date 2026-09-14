@@ -18,7 +18,7 @@ tree at build time.
 - Shows trigger, squeeze, thumbstick, button, click, and touch states for both controllers.
 - Shows whether the EVA host WebSocket is connected.
 - Sends the existing EVA `frame` protocol over WebSocket.
-- Receives `haptic` and `event_ack` messages and invokes native OpenXR controller haptics.
+- Receives explicit `haptic` messages and invokes native OpenXR controller haptics; `event_ack` is status-only.
 
 ## Requirements
 
@@ -40,13 +40,13 @@ export ANDROID_HOME="$HOME/Library/Android/sdk"
 The easiest path is to download the latest signed-by-GitHub release artifact:
 
 - [Latest release](https://github.com/Noietch/EVA-VR/releases/latest)
-- [Latest APK download](https://github.com/Noietch/EVA-VR/releases/latest/download/EVA-VR-v0.1.1.apk)
+- [Latest APK download](https://github.com/Noietch/EVA-VR/releases/latest/download/EVA-VR-v0.1.2.apk)
 
 After enabling USB debugging on the PICO 4 Ultra:
 
 ```bash
 adb devices
-adb install -r EVA-VR-v0.1.1.apk
+adb install -r EVA-VR-v0.1.2.apk
 ```
 
 The installed app is named **EVA-VR** and its package is
@@ -72,8 +72,8 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 ## Local Haptic Test
 
-This starts the app without a host connection and pulses both controllers every
-few seconds:
+This starts the app without a host connection and sends one explicit
+test pulse to both controllers:
 
 ```bash
 adb shell am force-stop org.eva.pico.input
@@ -148,8 +148,9 @@ The host sends haptics using:
 ```
 
 `hand` is `left` or `right`, `intensity` is clamped to `0..1`, and duration is
-clamped to `1..1000` milliseconds. `event_ack` messages are also supported and
-produce a short native confirmation pulse.
+clamped to `1..1000` milliseconds. `event_ack` messages are logged but do not trigger vibration by themselves.
+EVA may send a separate explicit `haptic` message when an operation is accepted;
+ordinary input frames never trigger vibration.
 
 ## Project Layout
 

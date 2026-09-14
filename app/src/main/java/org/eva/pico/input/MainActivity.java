@@ -30,17 +30,15 @@ public class MainActivity extends NativeActivity {
             if (testMode && resumed) {
                 enqueue(0, 1.0, 300);
                 enqueue(1, 1.0, 300);
-                handler.postDelayed(this, 2500);
             }
         }
     };
 
     @Override public void onCreate(Bundle state) {
         endpoint = getIntent().getStringExtra("server_url");
-        testMode = getIntent().getBooleanExtra("haptic_test", endpoint == null);
+        testMode = getIntent().getBooleanExtra("haptic_test", false);
         super.onCreate(state);
         setNativeAssetManager(getAssets());
-        if (testMode) handler.postDelayed(testPulse, 1200);
     }
     @Override protected void onResume() {
         super.onResume(); resumed = true; if (testMode) handler.postDelayed(testPulse, 500); connect();
@@ -81,9 +79,7 @@ public class MainActivity extends NativeActivity {
                             enqueue(hand.equals("left") ? 0 : 1,
                                 msg.optDouble("intensity", 0), msg.optDouble("duration_ms", 80));
                         } else if ("event_ack".equals(type)) {
-                            boolean accepted = msg.optBoolean("accepted");
-                            Log.i(TAG, "event_ack accepted=" + accepted);
-                            for (int i = 0; i < 2; i++) enqueue(i, accepted ? .45 : 1, accepted ? 90 : 240);
+                            Log.i(TAG, "event_ack accepted=" + msg.optBoolean("accepted"));
                         }
                     } catch (Exception error) { Log.w(TAG, "Invalid server message"); }
                 }

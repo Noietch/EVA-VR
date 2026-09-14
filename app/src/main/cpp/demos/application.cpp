@@ -43,7 +43,6 @@ private:
     void renderHandTracking(const glm::mat4& project, const glm::mat4& view);
     void getAllVideoFiles(const std::string& path, std::vector<std::string>& files);
     void startPlayVideo(const std::string& file);
-    void haptic(int leftright, float amplitude, float frequency, float duration/*seconds*/);
     // Calculate the angle between the vector v and the plane normal vector n
     float angleBetweenVectorAndPlane(const glm::vec3& vector, const glm::vec3& normal);
 
@@ -282,11 +281,6 @@ void Application::layout() {
     mPlayer->setModel(model);
 }
 
-void Application::haptic(int leftright, float amplitude, float frequency/*not used now*/, float duration/*seconds*/) {
-    if (mHapticCallback) {
-        mHapticCallback(mHapticCallbackArg, leftright, amplitude, frequency, duration);
-    }
-}
 
 namespace {
 struct PoseAngles {
@@ -409,32 +403,13 @@ void Application::showDashboardController() {
             ImGui::EndTable();
         }
 
-        for (int i = HAND_LEFT; i < HAND_COUNT; i++) {
-            if (mControllerEvent[i]->squeeze > 0) {
-                haptic(i, mControllerEvent[i]->squeeze, 1.0f, 0.02);
-            } else {
-                haptic(i, 0.0f, 0, 0.0f);
-            }
-        }
     }
 }
 
 void Application::showDashboard(const glm::mat4& project, const glm::mat4& view) {
-
-    // get refreshrate
-    uint32_t count = 0;
-    m_extentions->xrEnumerateDisplayRefreshRatesFB(m_session, 0, &count, nullptr);
-    std::vector<float> refreshRate(count);
-    m_extentions->xrEnumerateDisplayRefreshRatesFB(m_session, count, &count, refreshRate.data());
-    float currentreFreshRate = 0;
-    m_extentions->xrGetDisplayRefreshRateFB(m_session, &currentreFreshRate);
-    int currentreFreshRateTmp = (int)currentreFreshRate;
-
-    PlayModel playModel = mPlayer->getPlayStyle();
-
-    const XrPosef& controllerPose = mControllerPose[1];
-    glm::vec3 linePoint = glm::make_vec3((float*)&controllerPose.position);
-    glm::vec3 lineDirection = mController->getRayDirection(1);
+    const XrPosef& controllerPose = mControllerPose[HAND_RIGHT];
+    const glm::vec3 linePoint = glm::make_vec3((float*)&controllerPose.position);
+    const glm::vec3 lineDirection = mController->getRayDirection(HAND_RIGHT);
     mPanel->isIntersectWithLine(linePoint, lineDirection);
 
     mPanel->begin();
@@ -442,73 +417,8 @@ void Application::showDashboard(const glm::mat4& project, const glm::mat4& view)
     ImGui::Text("Device: %s | OS: %s", mDeviceModel.c_str(), mDeviceOS.c_str());
     showPoseStatus();
     showDashboardController();
-
-    if (ImGui::CollapsingHeader("framerate")) {
-        ImGui::RadioButton("72fps", (int*)&currentreFreshRateTmp, 72); 
-        if (refreshRate.size() > 1 || currentreFreshRateTmp == 92) {
-            ImGui::SameLine();
-            ImGui::RadioButton("90fps", (int*)&currentreFreshRateTmp, 90); 
-        }
-    }
-
-    if (ImGui::CollapsingHeader("sample options")) {
-        if (ImGui::BeginTable("split", 2)) {
-            ImGui::TableNextColumn(); ImGui::Checkbox("XR_FB_passthrough", &m_extentions->activePassthrough);
-            if (m_extentions->isSupportEyeTracking) {
-                ImGui::TableNextColumn(); ImGui::Checkbox("Eye Tracking", &m_extentions->activeEyeTracking);
-            }
-            ImGui::EndTable();
-        }
-    }
-
-    int32_t selectFileIndex = -1;
-    if (ImGui::CollapsingHeader("video player")) {
-        ImGui::SeparatorText("play model");
-        ImGui::RadioButton("2D",         (int*)&playModel, (int)playModel_2D); ImGui::SameLine();
-        ImGui::RadioButton("2D-180",     (int*)&playModel, (int)playModel_2D_180); ImGui::SameLine();
-        ImGui::RadioButton("2D-360",     (int*)&playModel, (int)playModel_2D_360); ImGui::SameLine();
-        ImGui::RadioButton("3D-SBS",     (int*)&playModel, (int)playModel_3D_SBS); ImGui::SameLine();
-        ImGui::RadioButton("3D-SBS-360", (int*)&playModel, (int)playModel_3D_SBS_360); ImGui::SameLine();
-        ImGui::RadioButton("3D-OU",      (int*)&playModel, (int)playModel_3D_OU); ImGui::SameLine();
-        ImGui::RadioButton("3D-OU-360",  (int*)&playModel, (int)playModel_3D_OU_360);
-
-        if (ImGui::CollapsingHeader("select media file")) {
-            const float TEXT_BASE_WIDTH = ImGui::CalcTextSize("A").x;
-            const float TEXT_BASE_HEIGHT = ImGui::GetTextLineHeightWithSpacing();
-            static ImGuiTableFlags flags = ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableFlags_ScrollY;
-            if (ImGui::BeginTable("meida files", 2, flags, ImVec2(0.0f, TEXT_BASE_HEIGHT * 11), 0.0f)) {
-                ImGui::TableSetupColumn("ID",   ImGuiTableColumnFlags_NoSort     | ImGuiTableColumnFlags_WidthFixed,   0.0f);
-                ImGui::TableSetupColumn("name", ImGuiTableColumnFlags_NoSort     | ImGuiTableColumnFlags_WidthStretch, 0.0f);
-                ImGui::TableSetupScrollFreeze(0, 1); // Make row always visible
-                ImGui::TableHeadersRow();
-                for (int32_t i = 0; i < mAllVideoFiles.size(); i++) {
-                    ImGui::TableNextRow();
-                    ImGui::TableNextColumn();
-                    if (ImGui::Selectable(Fmt("%02d", i).c_str(), true, ImGuiSelectableFlags_SpanAllColumns)) {
-                        selectFileIndex = i;
-                    }
-                    ImGui::TableNextColumn();
-                    ImGui::Text("%s", mAllVideoFiles[i].c_str());
-                }
-                ImGui::EndTable();
-            }
-        }
-    }
-    if (selectFileIndex != -1) {
-        infof("item:%d, exchange video file %s", selectFileIndex, mAllVideoFiles[selectFileIndex].c_str());
-        startPlayVideo(mAllVideoFiles[selectFileIndex]);
-    }
-
-    ImGui::Text("This is some useful text.");
-
     mPanel->end();
     mPanel->render(project, view);
-
-    mPlayer->setPlayStyle(playModel);
-
-    if (currentreFreshRateTmp != (int)currentreFreshRate) {  //changed
-        m_extentions->xrRequestDisplayRefreshRateFB(m_session, (float)currentreFreshRateTmp);
-    }
 }
 
 void Application::showDeviceInformation(const glm::mat4& project, const glm::mat4& view) {
