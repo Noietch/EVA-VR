@@ -1,0 +1,27 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 29
+    buildToolsVersion '30.0.3'
+    ndkVersion '23.2.8568313'
+    lint { abortOnError false }
+    defaultConfig {
+        applicationId 'org.eva.pico.input'
+        minSdkVersion 29
+        targetSdkVersion 29
+        versionCode 1
+        versionName '0.1.0'
+        ndk { abiFilters 'arm64-v8a' }
+        externalNativeBuild { ndkBuild { arguments '-j4' } }
+    }
+    externalNativeBuild { ndkBuild { path 'src/main/cpp/Android.mk' } }
+    buildTypes {
+        release { minifyEnabled false }
+        debug { buildConfigField 'boolean', 'ENABLE_DEBUG', 'true' }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+dependencies { implementation 'com.squareup.okhttp3:okhttp:3.14.9' }
