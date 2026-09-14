@@ -15,7 +15,7 @@ import org.json.JSONObject;
 public class MainActivity extends NativeActivity {
     static { System.loadLibrary("openxr_loader"); System.loadLibrary("eva_pico"); }
     public native void setNativeAssetManager(AssetManager assetManager);
-    private static final String TAG = "EVA PICO";
+    private static final String TAG = "EVA-VR";
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final ArrayBlockingQueue<double[]> haptics = new ArrayBlockingQueue<>(16);
     private final OkHttpClient client = new OkHttpClient.Builder()

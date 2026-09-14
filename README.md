@@ -1,11 +1,11 @@
-# EVA PICO
+# EVA-VR
 
-Standalone repository for the EVA-CLIENT native PICO client: [github.com/Noietch/EVA-PICO](https://github.com/Noietch/EVA-PICO).
+Standalone repository for the EVA-CLIENT native PICO client: [github.com/Noietch/EVA-VR](https://github.com/Noietch/EVA-VR).
 
-EVA PICO is a small native OpenXR client for PICO 4 Ultra. It replaces the
+EVA-VR is a small native OpenXR client for PICO 4 Ultra. It replaces the
 browser/WebXR input layer when controller haptics are required.
 
-The APK is named **EVA PICO** and uses the EVA logo as its launcher icon.
+The APK is named **EVA-VR** and uses the EVA logo as its launcher icon.
 The complete Android/OpenXR source and the required OpenXR sample dependencies
 are included in this repository; it does not depend on the EVA-CLIENT source
 tree at build time.
@@ -39,17 +39,17 @@ export ANDROID_HOME="$HOME/Library/Android/sdk"
 
 The easiest path is to download the latest signed-by-GitHub release artifact:
 
-- [Latest release](https://github.com/Noietch/EVA-PICO/releases/latest)
-- [Latest APK download](https://github.com/Noietch/EVA-PICO/releases/latest/download/EVA-PICO-v0.1.0.apk)
+- [Latest release](https://github.com/Noietch/EVA-VR/releases/latest)
+- [Latest APK download](https://github.com/Noietch/EVA-VR/releases/latest/download/EVA-VR-v0.1.1.apk)
 
 After enabling USB debugging on the PICO 4 Ultra:
 
 ```bash
 adb devices
-adb install -r EVA-PICO-v0.1.0.apk
+adb install -r EVA-VR-v0.1.1.apk
 ```
 
-The installed app is named **EVA PICO** and its package is
+The installed app is named **EVA-VR** and its package is
 `org.eva.pico.input`. It can also be started from the PICO app library:
 
 ```bash
@@ -78,11 +78,11 @@ few seconds:
 ```bash
 adb shell am force-stop org.eva.pico.input
 adb shell am start -n org.eva.pico.input/.MainActivity --ez haptic_test true
-adb logcat -s "EVA PICO" "OpenXR"
+adb logcat -s "EVA-VR" "OpenXR"
 ```
 
 Successful native haptic calls are logged by the OpenXR layer as
-`EVA PICO haptic ... result=XR_SUCCESS`.
+`EVA-VR haptic ... result=XR_SUCCESS`.
 
 ## Connect To EVA
 
@@ -156,7 +156,7 @@ produce a short native confirmation pulse.
 - `app/src/main/cpp`: OpenXR renderer, controller input, UI, JNI bridge, and haptics.
 - `app/src/main/java`: WebSocket connection and Android lifecycle code.
 - `app/src/main/assets`: controller models and fonts used by the diagnostic scene.
-- `assets/eva-logo.svg`: source for the EVA PICO launcher icon.
+- `assets/eva-logo.svg`: source for the EVA-VR launcher icon.
 - `build.sh`: reproducible local build entry point.
 
 The OpenXR sample code is included directly under `app/src/main`; there is no

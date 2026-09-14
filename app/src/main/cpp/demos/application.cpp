@@ -323,7 +323,7 @@ void Application::showPoseStatus() {
     ImGui::TextColored(connected ? ImVec4(0.25f, 1.0f, 0.45f, 1.0f) : ImVec4(1.0f, 0.35f, 0.25f, 1.0f),
                        "HOST: %s", connected ? "CONNECTED" : "DISCONNECTED");
     ImGui::SameLine();
-    ImGui::Text("  EVA PICO");
+    ImGui::Text("  EVA-VR");
 
     if (ImGui::BeginTable("pose status", 7, ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableFlags_SizingFixedFit)) {
         ImGui::TableSetupColumn("source");
@@ -438,7 +438,7 @@ void Application::showDashboard(const glm::mat4& project, const glm::mat4& view)
     mPanel->isIntersectWithLine(linePoint, lineDirection);
 
     mPanel->begin();
-    ImGui::Text("EVA PICO");
+    ImGui::Text("EVA-VR");
     ImGui::Text("Device: %s | OS: %s", mDeviceModel.c_str(), mDeviceOS.c_str());
     showPoseStatus();
     showDashboardController();

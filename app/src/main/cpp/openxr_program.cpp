@@ -1357,7 +1357,7 @@ struct OpenXrProgram : IOpenXrProgram {
             hapticInfo.subactionPath = m_input.handSubactionPath[hand];
             const XrResult result = xrApplyHapticFeedback(
                 m_session, &hapticInfo, reinterpret_cast<const XrHapticBaseHeader*>(&vibration));
-            Log::Write(Log::Level::Info, Fmt("EVA PICO haptic hand=%d amplitude=%.2f duration_ms=%.0f result=%s",
+            Log::Write(Log::Level::Info, Fmt("EVA-VR haptic hand=%d amplitude=%.2f duration_ms=%.0f result=%s",
                                              hand, haptic[1], haptic[2], to_string(result)));
         }
 
