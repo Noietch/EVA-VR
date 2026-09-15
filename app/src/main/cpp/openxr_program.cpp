@@ -1110,7 +1110,8 @@ struct OpenXrProgram : IOpenXrProgram {
         static float trigger[Side::COUNT] = {0};
         static float squeeze[Side::COUNT] = {0};
 
-        // Get pose and grab action state and start haptic vibrate when hand is 90% squeezed.
+        // Read controller pose and input state. Haptics are handled only by
+        // the explicit server-request path below.
         for (auto hand : {Side::LEFT, Side::RIGHT}) {
             ApplicationEvent &applicationEvent = m_applicationEvent[hand];
             applicationEvent.controllerEventBit = 0x00;

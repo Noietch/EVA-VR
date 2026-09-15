@@ -3,7 +3,8 @@
 Standalone repository for the EVA-CLIENT native PICO client: [github.com/Noietch/EVA-VR](https://github.com/Noietch/EVA-VR).
 
 EVA-VR is a small native OpenXR client for PICO 4 Ultra. It replaces the
-browser/WebXR input layer when controller haptics are required.
+browser/WebXR input layer and keeps the controller input path available over
+ADB-forwarded WebSocket connections.
 
 The APK is named **EVA-VR** and uses the EVA logo as its launcher icon.
 The complete Android/OpenXR source and the required OpenXR sample dependencies
@@ -18,7 +19,8 @@ tree at build time.
 - Shows trigger, squeeze, thumbstick, button, click, and touch states for both controllers.
 - Shows whether the EVA host WebSocket is connected.
 - Sends the existing EVA `frame` protocol over WebSocket.
-- Receives explicit `haptic` messages and invokes native OpenXR controller haptics; `event_ack` is status-only.
+- Receives explicit `haptic` messages and invokes native OpenXR controller haptics only when both intensity and duration are positive.
+- Never starts a standalone test pulse and never vibrates from ordinary input frames or `event_ack` messages.
 
 ## Requirements
 
@@ -40,13 +42,13 @@ export ANDROID_HOME="$HOME/Library/Android/sdk"
 The easiest path is to download the latest signed-by-GitHub release artifact:
 
 - [Latest release](https://github.com/Noietch/EVA-VR/releases/latest)
-- [Latest APK download](https://github.com/Noietch/EVA-VR/releases/latest/download/EVA-VR-v0.1.2.apk)
+- [Latest APK download](https://github.com/Noietch/EVA-VR/releases/latest/download/EVA-VR-v0.2.0.apk)
 
 After enabling USB debugging on the PICO 4 Ultra:
 
 ```bash
 adb devices
-adb install -r EVA-VR-v0.1.2.apk
+adb install -r EVA-VR-v0.2.0.apk
 ```
 
 The installed app is named **EVA-VR** and its package is
@@ -70,39 +72,18 @@ export ANDROID_HOME="$HOME/Library/Android/sdk"
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
-## Local Haptic Test
-
-This starts the app without a host connection and sends one explicit
-test pulse to both controllers:
-
-```bash
-adb shell am force-stop org.eva.pico.input
-adb shell am start -n org.eva.pico.input/.MainActivity --ez haptic_test true
-adb logcat -s "EVA-VR" "OpenXR"
-```
-
-Successful native haptic calls are logged by the OpenXR layer as
-`EVA-VR haptic ... result=XR_SUCCESS`.
-
 ## Connect To EVA
 
-The APK accepts a WebSocket URL through an Android intent extra. The endpoint
-can point directly to a Mac/Linux host or to a local ADB reverse tunnel.
+The APK uses ADB-only transport. It always connects to
+`ws://127.0.0.1:43876/ws?token=eva` inside the PICO. No IP input or Wi-Fi/LAN
+endpoint is used by this release.
 
 Example with the existing EVA node on port `43876`:
 
 ```bash
 adb reverse tcp:43876 tcp:43876
 adb shell am force-stop org.eva.pico.input
-adb shell am start -n org.eva.pico.input/.MainActivity \
-  --es server_url 'ws://127.0.0.1:43876/ws?token=YOUR_TOKEN'
-```
-
-For a host on the same LAN, use its address instead:
-
-```bash
-adb shell am start -n org.eva.pico.input/.MainActivity \
-  --es server_url 'ws://192.168.1.20:43876/ws?token=YOUR_TOKEN'
+adb shell am start -n org.eva.pico.input/.MainActivity
 ```
 
 The in-view panel changes from `HOST: DISCONNECTED` to
@@ -141,20 +122,20 @@ update. The payload is compatible with the current EVA WebXR node:
 }
 ```
 
-The host sends haptics using:
+The host may send an explicit haptic request using:
 
 ```json
 {"type":"haptic","hand":"right","intensity":0.6,"duration_ms":80}
 ```
 
 `hand` is `left` or `right`, `intensity` is clamped to `0..1`, and duration is
-clamped to `1..1000` milliseconds. `event_ack` messages are logged but do not trigger vibration by themselves.
-EVA may send a separate explicit `haptic` message when an operation is accepted;
-ordinary input frames never trigger vibration.
+clamped to `1..1000` milliseconds. Requests with non-positive or invalid
+intensity/duration are ignored. `event_ack` messages are logged but never
+trigger vibration, and ordinary input frames never trigger vibration.
 
 ## Project Layout
 
-- `app/src/main/cpp`: OpenXR renderer, controller input, UI, JNI bridge, and haptics.
+- `app/src/main/cpp`: OpenXR renderer, controller input, UI, JNI bridge, and request-driven haptics.
 - `app/src/main/java`: WebSocket connection and Android lifecycle code.
 - `app/src/main/assets`: controller models and fonts used by the diagnostic scene.
 - `assets/eva-logo.svg`: source for the EVA-VR launcher icon.
