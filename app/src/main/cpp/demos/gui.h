@@ -15,6 +15,7 @@ public:
     void begin();
     void end();
     void triggerEvent(bool down);
+    void updateDrag();
 
 private:
     bool initShader();
@@ -34,4 +35,7 @@ private:
 
     glm::mat4 mModel;
     glm::vec3 mIntersectionPoint;
+    glm::vec3 mPreviousIntersectionPoint;
+    bool mHasIntersection = false;
+    bool mHasPreviousIntersection = false;
 };

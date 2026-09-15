@@ -68,6 +68,32 @@ bool Gui::initialize(int32_t width, int32_t height) {
 
     GuiBase::instance().initialize();
 
+    ImGuiStyle& style = ImGui::GetStyle();
+    style.WindowRounding = 18.0f;
+    style.ChildRounding = 12.0f;
+    style.FrameRounding = 8.0f;
+    style.PopupRounding = 10.0f;
+    style.ScrollbarRounding = 8.0f;
+    style.GrabRounding = 8.0f;
+    style.WindowBorderSize = 0.0f;
+    style.FrameBorderSize = 0.0f;
+    style.WindowPadding = ImVec2(22.0f, 18.0f);
+    style.FramePadding = ImVec2(10.0f, 7.0f);
+    style.ItemSpacing = ImVec2(10.0f, 8.0f);
+    style.ItemInnerSpacing = ImVec2(8.0f, 6.0f);
+    style.Colors[ImGuiCol_WindowBg] = ImVec4(0.035f, 0.045f, 0.060f, 0.94f);
+    style.Colors[ImGuiCol_ChildBg] = ImVec4(0.055f, 0.070f, 0.090f, 0.72f);
+    style.Colors[ImGuiCol_Border] = ImVec4(0.20f, 0.30f, 0.40f, 0.35f);
+    style.Colors[ImGuiCol_Text] = ImVec4(0.90f, 0.94f, 0.98f, 1.0f);
+    style.Colors[ImGuiCol_TextDisabled] = ImVec4(0.48f, 0.56f, 0.65f, 1.0f);
+    style.Colors[ImGuiCol_Header] = ImVec4(0.08f, 0.30f, 0.42f, 0.80f);
+    style.Colors[ImGuiCol_HeaderHovered] = ImVec4(0.10f, 0.42f, 0.56f, 0.90f);
+    style.Colors[ImGuiCol_TableHeaderBg] = ImVec4(0.07f, 0.15f, 0.20f, 1.0f);
+    style.Colors[ImGuiCol_TableBorderStrong] = ImVec4(0.18f, 0.30f, 0.38f, 0.75f);
+    style.Colors[ImGuiCol_TableBorderLight] = ImVec4(0.12f, 0.20f, 0.27f, 0.55f);
+    style.Colors[ImGuiCol_TableRowBg] = ImVec4(0.04f, 0.06f, 0.08f, 0.45f);
+    style.Colors[ImGuiCol_TableRowBgAlt] = ImVec4(0.07f, 0.10f, 0.13f, 0.45f);
+
     if (!initShader()) {
         return false;
     }
@@ -190,10 +216,12 @@ bool Gui::isIntersectWithLine(const glm::vec3& linePoint, const glm::vec3& lineD
 
         updateMousePosition(posx, posy);
         mIntersectionPoint = point;
+        mHasIntersection = true;
 
         return true;
     } else {
         mIntersectionPoint = {100.0, 0.0, 0.0};
+        mHasIntersection = false;
         return false;
     }
 }
@@ -227,10 +255,25 @@ void Gui::active() {
 void Gui::begin() {
     active();
     ImGui::NewFrame();
+    updateDrag();
+    ImGui::SetNextWindowBgAlpha(0.94f);
     ImGui::Begin(mName.c_str());
     ImGui::SetWindowSize(ImVec2(mWidth, mHeight));
     ImGui::SetWindowPos(ImVec2(0, 0));
     ImGui::SetWindowFocus();
+}
+
+void Gui::updateDrag() {
+    auto& io = ImGui::GetIO();
+    if (mHasIntersection && io.MouseDown[0]) {
+        if (mHasPreviousIntersection) {
+            mModel = glm::translate(mModel, mIntersectionPoint - mPreviousIntersectionPoint);
+        }
+        mPreviousIntersectionPoint = mIntersectionPoint;
+        mHasPreviousIntersection = true;
+    } else if (!io.MouseDown[0]) {
+        mHasPreviousIntersection = false;
+    }
 }
 
 void Gui::end() {

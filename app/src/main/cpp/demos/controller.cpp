@@ -63,8 +63,16 @@ bool Controller::initialize(const std::string& deviceModel) {
     std::transform(device.begin(), device.end(), device.begin(), [](char& c) {
         return std::tolower(c);
     });
-    if (device.find("Neo3") != std::string::npos) {
+    if (device.find("neo3") != std::string::npos) {
         mControllerType = controllerTypeNeo3;
+    } else if (device.find("pico4 ultra") != std::string::npos ||
+               device.find("pico4ultra") != std::string::npos ||
+               device.find("pico 4u") != std::string::npos ||
+               device.find("pico4u") != std::string::npos ||
+               device.find("pico4s") != std::string::npos ||
+               device.find("sparrow") != std::string::npos ||
+               device.find("a9210") != std::string::npos) {
+        mControllerType = controllerTypePico4Ultra;
     } else {
         mControllerType = controllerTypePico4;
     }
@@ -92,6 +100,33 @@ bool Controller::initialize(const std::string& deviceModel) {
         mLeftController->loadModelFile();
         mLeftController->mController->activeMeshTexture("PICO3_Left", "neo3_controller/controller5_idle.jpg");
 
+    } else if (mControllerType == controllerTypePico4Ultra) {
+        // PICO 4 Ultra is the PICO4S / sparrow controller family.
+        // These meshes are different from the original PICO 4 controller.
+        const std::string rightModel = "pico4ultra_controller/o_com_PICO4U_right_01.fbx";
+        const std::string leftModel = "pico4ultra_controller/o_com_PICO4U_left_01.fbx";
+        const std::string baseTexture = "pico4ultra_controller/o_com_sparrow_01_b.png";
+
+        mRightController->setModelFile(rightModel);
+        mLeftController->setModelFile(leftModel);
+
+        mRightController->mController->bindMeshTexture("o_com_sparrow_right", baseTexture);
+        mRightController->mController->bindMeshTexture("o_com_sparrow_right_power", "pico4ultra_controller/o_com_PICO4U_power_01.png");
+        mRightController->mController->bindMeshTexture("o_com_sparrow_right_power", "pico4ultra_controller/o_com_PICO4U_power_02.png");
+        mRightController->mController->bindMeshTexture("o_com_sparrow_right_power", "pico4ultra_controller/o_com_PICO4U_power_03.png");
+        mRightController->mController->bindMeshTexture("o_com_sparrow_right_power", "pico4ultra_controller/o_com_PICO4U_power_04.png");
+        mRightController->mController->bindMeshTexture("o_com_sparrow_right_power", "pico4ultra_controller/o_com_PICO4U_power_05.png");
+        mRightController->loadModelFile();
+        mRightController->mController->activeMeshTexture("o_com_sparrow_right", baseTexture);
+
+        mLeftController->mController->bindMeshTexture("o_com_sparrow_left", baseTexture);
+        mLeftController->mController->bindMeshTexture("o_com_sparrow_left_power", "pico4ultra_controller/o_com_PICO4U_power_01.png");
+        mLeftController->mController->bindMeshTexture("o_com_sparrow_left_power", "pico4ultra_controller/o_com_PICO4U_power_02.png");
+        mLeftController->mController->bindMeshTexture("o_com_sparrow_left_power", "pico4ultra_controller/o_com_PICO4U_power_03.png");
+        mLeftController->mController->bindMeshTexture("o_com_sparrow_left_power", "pico4ultra_controller/o_com_PICO4U_power_04.png");
+        mLeftController->mController->bindMeshTexture("o_com_sparrow_left_power", "pico4ultra_controller/o_com_PICO4U_power_05.png");
+        mLeftController->loadModelFile();
+        mLeftController->mController->activeMeshTexture("o_com_sparrow_left", baseTexture);
     } else {
         mRightController->setModelFile("pico4_controller/PICO4_Controller_Right.fbx");
         mLeftController->setModelFile("pico4_controller/PICO4_Controller_Left.fbx");
@@ -126,8 +161,13 @@ void Controller::setRightPowerValue(int power) {
     }
     int p = (100 - power)/ 20 + 1;
     p = p > 5 ? 5 : p;
-    std::string textureName = "pico4_controller/PICO4_ControllerPower_0" + std::to_string(p) + ".png";
-    mRightController->mController->activeMeshTexture("Power", textureName);
+    if (mControllerType == controllerTypePico4Ultra) {
+        const std::string textureName = "pico4ultra_controller/o_com_PICO4U_power_0" + std::to_string(p) + ".png";
+        mRightController->mController->activeMeshTexture("o_com_sparrow_right_power", textureName);
+    } else {
+        const std::string textureName = "pico4_controller/PICO4_ControllerPower_0" + std::to_string(p) + ".png";
+        mRightController->mController->activeMeshTexture("Power", textureName);
+    }
 }
 
 void Controller::setLeftPowerValue(int power) {
@@ -136,8 +176,13 @@ void Controller::setLeftPowerValue(int power) {
     }
     int p = (100 - power)/ 20 + 1;
     p = p > 5 ? 5 : p;
-    std::string textureName = "pico4_controller/PICO4_ControllerPower_0" + std::to_string(p) + ".png";
-    mLeftController->mController->activeMeshTexture("Power", textureName);
+    if (mControllerType == controllerTypePico4Ultra) {
+        const std::string textureName = "pico4ultra_controller/o_com_PICO4U_power_0" + std::to_string(p) + ".png";
+        mLeftController->mController->activeMeshTexture("o_com_sparrow_left_power", textureName);
+    } else {
+        const std::string textureName = "pico4_controller/PICO4_ControllerPower_0" + std::to_string(p) + ".png";
+        mLeftController->mController->activeMeshTexture("Power", textureName);
+    }
 }
 
 void Controller::setPowerValue(int leftright, int power) {

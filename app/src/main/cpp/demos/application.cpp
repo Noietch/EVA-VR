@@ -98,6 +98,8 @@ Application::Application(const std::shared_ptr<struct Options>& options, const s
     mPlayer = std::make_shared<Player>();
     mHapticCallback = nullptr;
     memset(mControllerPose, 0, sizeof(mControllerPose));
+    mControllerEvent[HAND_LEFT] = &mControllerState[HAND_LEFT];
+    mControllerEvent[HAND_RIGHT] = &mControllerState[HAND_RIGHT];
     mCubeRender = std::make_shared<CubeRender>();
 }
 
@@ -258,8 +260,6 @@ void Application::inputEvent(int leftright, const ApplicationEvent& event) {
 
 void Application::layout() {
     // Keep the status panel centered in front of the user's current head pose.
-    // The panel is intentionally close enough to read, but far enough to avoid
-    // intersecting the hands during normal controller use.
     glm::mat4 model = glm::mat4(1.0f);
     float width, height;
     const float playerScale = 1.0f;
@@ -337,10 +337,6 @@ void Application::showPoseStatus() {
 }
 
 void Application::showDashboardController() {
-    if (mControllerEvent[HAND_LEFT] == nullptr || mControllerEvent[HAND_RIGHT] == nullptr) {
-        ImGui::Text("Waiting for controller input...");
-        return;
-    }
 #define HAND_BIT_LEFT HAND_LEFT+1
 #define HAND_BIT_RIGHT HAND_RIGHT+1
 #define SHOW_CONTROLLER_ROW_float(x)    ImGui::TableNextRow();\
@@ -413,8 +409,13 @@ void Application::showDashboard(const glm::mat4& project, const glm::mat4& view)
     mPanel->isIntersectWithLine(linePoint, lineDirection);
 
     mPanel->begin();
-    ImGui::Text("EVA-VR");
-    ImGui::Text("Device: %s | OS: %s", mDeviceModel.c_str(), mDeviceOS.c_str());
+    ImGui::TextColored(ImVec4(0.30f, 0.85f, 1.0f, 1.0f), "EVA-VR");
+    ImGui::SameLine();
+    ImGui::TextDisabled("NATIVE XR CONTROL");
+    ImGui::Separator();
+    ImGui::TextDisabled("DEVICE");
+    ImGui::SameLine();
+    ImGui::Text("%s  |  OS %s", mDeviceModel.c_str(), mDeviceOS.c_str());
     showPoseStatus();
     showDashboardController();
     mPanel->end();

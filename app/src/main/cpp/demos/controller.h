@@ -31,6 +31,7 @@ private:
 typedef enum {
     controllerTypeNone = 0,
     controllerTypePico4,
+    controllerTypePico4Ultra,
     controllerTypeNeo3,
 }ControllerType;
 
