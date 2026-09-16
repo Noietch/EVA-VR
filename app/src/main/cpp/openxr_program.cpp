@@ -1159,7 +1159,8 @@ struct OpenXrProgram : IOpenXrProgram {
                 } else {
                     applicationEvent.controllerEventBit |= CONTROLLER_EVENT_BIT_value_thumbstick;
                     applicationEvent.thumbstick_x = thumbstickValue.currentState.x;
-                    applicationEvent.thumbstick_y = thumbstickValue.currentState.y;
+                    // Match WebXR Gamepad axes: pushing the stick up is negative Y.
+                    applicationEvent.thumbstick_y = -thumbstickValue.currentState.y;
                 }
                 joystick_x[hand] = thumbstickValue.currentState.x;
                 joystick_y[hand] = thumbstickValue.currentState.y;
