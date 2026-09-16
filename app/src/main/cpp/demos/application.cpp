@@ -238,6 +238,8 @@ void Application::inputEvent(int leftright, const ApplicationEvent& event) {
                 "{\"pressed\":%s,\"touched\":%s,\"value\":%s},"
                 "{\"pressed\":%s,\"touched\":%s,\"value\":%s}],\"axes\":[%.7g,%.7g]}",
                 valid ? "true" : "false",
+                // Keep the native payload identical to WebXR. EVA's
+                // base_from_xr_rotation performs the robot-frame conversion.
                 pose.position.x, pose.position.y, pose.position.z,
                 pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w,
                 state.trigger >= 0.5f ? "true" : "false", state.touch_trigger ? "true" : "false", state.trigger,

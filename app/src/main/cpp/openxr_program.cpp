@@ -1434,7 +1434,10 @@ struct OpenXrProgram : IOpenXrProgram {
         std::vector<XrPosef> handPose;
         for (auto hand : {Side::LEFT, Side::RIGHT}) {
             XrSpaceLocation spaceLocation{XR_TYPE_SPACE_LOCATION};
-            res = xrLocateSpace(m_input.aimSpace[hand], m_appSpace, predictedDisplayTime, &spaceLocation);
+            // WebXR sends XRInputSource.gripSpace for teleoperation. Use the
+            // matching OpenXR grip action space here; aimSpace is the pointing
+            // ray and carries a controller-specific rotation offset.
+            res = xrLocateSpace(m_input.handSpace[hand], m_appSpace, predictedDisplayTime, &spaceLocation);
             CHECK_XRRESULT(res, "xrLocateSpace");
             if (XR_UNQUALIFIED_SUCCESS(res)) {
                 if ((spaceLocation.locationFlags & XR_SPACE_LOCATION_POSITION_VALID_BIT) != 0 &&
