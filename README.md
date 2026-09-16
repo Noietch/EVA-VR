@@ -39,16 +39,17 @@ export ANDROID_HOME="$HOME/Library/Android/sdk"
 
 ## Install A Released APK
 
-The easiest path is to download the latest signed-by-GitHub release artifact:
+The easiest path is to download the latest APK release artifact (signed with the
+project's development key):
 
 - [Latest release](https://github.com/Noietch/EVA-VR/releases/latest)
-- [Latest APK download](https://github.com/Noietch/EVA-VR/releases/latest/download/EVA-VR-v0.2.0.apk)
+- [Latest APK download](https://github.com/Noietch/EVA-VR/releases/latest/download/EVA-VR-v0.2.1.apk)
 
 After enabling USB debugging on the PICO 4 Ultra:
 
 ```bash
 adb devices
-adb install -r EVA-VR-v0.2.0.apk
+adb install -r EVA-VR-v0.2.1.apk
 ```
 
 The installed app is named **EVA-VR** and its package is
