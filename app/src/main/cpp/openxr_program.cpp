@@ -11,6 +11,7 @@
 #include "openxr_program.h"
 #include <common/xr_linear.h>
 #include <array>
+#include <chrono>
 #include <cmath>
 #include <math.h>
 #include "demos/application.h"
@@ -1122,6 +1123,7 @@ struct OpenXrProgram : IOpenXrProgram {
         static float joystick_y[Side::COUNT] = {0};
         static float trigger[Side::COUNT] = {0};
         static float squeeze[Side::COUNT] = {0};
+        bool thumbstickHeld[Side::COUNT] = {false, false};
 
         // Read controller pose and input state. Haptics are handled only by
         // the explicit server-request path below.
@@ -1166,6 +1168,8 @@ struct OpenXrProgram : IOpenXrProgram {
             getInfo.action = m_input.thumbstickClickAction;
             XrActionStateBoolean thumbstickClick{XR_TYPE_ACTION_STATE_BOOLEAN};
             CHECK_XRCMD(xrGetActionStateBoolean(m_session, &getInfo, &thumbstickClick));
+            thumbstickHeld[hand] = thumbstickClick.isActive == XR_TRUE &&
+                                   thumbstickClick.currentState == XR_TRUE;
             if ((thumbstickClick.isActive == XR_TRUE) && (thumbstickClick.changedSinceLastSync == XR_TRUE)) {
                 applicationEvent.controllerEventBit |= CONTROLLER_EVENT_BIT_click_thumbstick;
                 if(thumbstickClick.currentState == XR_TRUE) {
@@ -1353,7 +1357,24 @@ struct OpenXrProgram : IOpenXrProgram {
                 }
             }
 
-            m_application->inputEvent(hand, applicationEvent);
+        }
+
+        // PICO 4 Ultra reserves the menu action for the system. Holding both
+        // stick clicks provides an in-app escape without emitting the gesture
+        // as teleop input.
+        if (thumbstickHeld[Side::LEFT] && thumbstickHeld[Side::RIGHT]) {
+            const auto now = std::chrono::steady_clock::now();
+            if (!m_exitGestureActive) {
+                m_exitGestureActive = true;
+                m_exitGestureStart = now;
+            } else if (now - m_exitGestureStart >= std::chrono::seconds(2)) {
+                RequestExit();
+            }
+            return;
+        }
+        m_exitGestureActive = false;
+        for (auto hand : {Side::LEFT, Side::RIGHT}) {
+            m_application->inputEvent(hand, m_applicationEvent[hand]);
         }
 
         // Haptic commands arrive from the EVA WebSocket and are executed on
@@ -1600,6 +1621,8 @@ struct OpenXrProgram : IOpenXrProgram {
     XrSessionState m_sessionState{XR_SESSION_STATE_UNKNOWN};
     bool m_sessionRunning{false};
     bool m_exitRequested{false};
+    bool m_exitGestureActive{false};
+    std::chrono::steady_clock::time_point m_exitGestureStart{};
 
     XrEventDataBuffer m_eventDataBuffer;
     InputState m_input;
