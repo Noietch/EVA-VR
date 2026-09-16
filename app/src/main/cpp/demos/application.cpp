@@ -32,6 +32,7 @@ public:
     virtual void setGazeLocation(XrSpaceLocation& gazeLocation, std::vector<XrView>& views, float ipd, XrResult result = XR_SUCCESS) override;
     virtual void setHandJointLocation(XrHandJointLocationEXT* location) override;
     virtual void inputEvent(int leftright, const ApplicationEvent& event) override;
+    bool isExitRequested() const override { return mExitRequested; }
     virtual void renderFrame(const XrPosef& pose, const glm::mat4& project, const glm::mat4& view, int32_t eye) override;
 private:
     void layout();
@@ -77,6 +78,7 @@ private:
     std::string mDeviceOS;
 
     bool mIsShowDashboard = true;
+    bool mExitRequested = false;
 
     std::vector<std::string> mAllVideoFiles;
     int32_t mCount = 0;
@@ -200,14 +202,9 @@ void Application::startPlayVideo(const std::string& file) {
 }
 
 void Application::inputEvent(int leftright, const ApplicationEvent& event) {
+    if (mExitRequested) return;
     mControllerState[leftright] = event;
     mControllerEvent[leftright] = &mControllerState[leftright];
-
-    if (event.controllerEventBit & CONTROLLER_EVENT_BIT_click_menu) {
-        if (event.click_menu == true) {
-            mIsShowDashboard = !mIsShowDashboard;
-        }
-    }
 
     if (leftright == HAND_LEFT) {
         return;
@@ -414,6 +411,8 @@ void Application::showDashboard(const glm::mat4& project, const glm::mat4& view)
     ImGui::TextColored(ImVec4(0.30f, 0.85f, 1.0f, 1.0f), "EVA-VR");
     ImGui::SameLine();
     ImGui::TextDisabled("NATIVE XR CONTROL");
+    ImGui::SameLine();
+    if (ImGui::Button("Exit")) mExitRequested = true;
     ImGui::Separator();
     ImGui::TextDisabled("DEVICE");
     ImGui::SameLine();

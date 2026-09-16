@@ -99,6 +99,10 @@ static int32_t onInputEvent(struct android_app* app, AInputEvent* event){
     if(type == AINPUT_EVENT_TYPE_KEY){
         int32_t action = AKeyEvent_getAction(event);
         int32_t code   = AKeyEvent_getKeyCode(event);
+        if (code == AKEYCODE_BACK) {
+            if (action == AKEY_EVENT_ACTION_UP) ANativeActivity_finish(app->activity);
+            return 1;
+        }
         Log::Write(Log::Level::Info, __FILE__, __LINE__, Fmt("onInputEvent:%d %d\n", code, action));
     }
     return 0;
@@ -179,8 +183,10 @@ void android_main(struct android_app* app) {
                 if (source != nullptr) {
                     source->process(app, source);
                 }
+                if (app->destroyRequested != 0) break;
             }
 
+            if (app->destroyRequested != 0) break;
             program->PollEvents(&exitRenderLoop, &requestRestart);
 
             if (exitRenderLoop && !requestRestart) {

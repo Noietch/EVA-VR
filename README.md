@@ -43,13 +43,13 @@ The easiest path is to download the latest APK release artifact (signed with the
 project's development key):
 
 - [Latest release](https://github.com/Noietch/EVA-VR/releases/latest)
-- [Latest APK download](https://github.com/Noietch/EVA-VR/releases/latest/download/EVA-VR-v0.2.1.apk)
+- [Latest APK download](https://github.com/Noietch/EVA-VR/releases/latest/download/EVA-VR-v0.2.2.apk)
 
 After enabling USB debugging on the PICO 4 Ultra:
 
 ```bash
 adb devices
-adb install -r EVA-VR-v0.2.1.apk
+adb install -r EVA-VR-v0.2.2.apk
 ```
 
 The installed app is named **EVA-VR** and its package is
@@ -58,6 +58,9 @@ The installed app is named **EVA-VR** and its package is
 ```bash
 adb shell am start -n org.eva.pico.input/.MainActivity
 ```
+
+Select **Exit** in the status panel to leave EVA-VR. Android Back also closes
+the app. System-owned PICO buttons are left to the headset runtime.
 
 The release APK is the recommended way to try the client. You only need the
 source build below when changing the native OpenXR code or the UI.

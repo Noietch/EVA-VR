@@ -1097,7 +1097,20 @@ struct OpenXrProgram : IOpenXrProgram {
 
     bool IsSessionFocused() const override { return m_sessionState == XR_SESSION_STATE_FOCUSED; }
 
+    void RequestExit() {
+        if (m_exitRequested) return;
+        const XrResult result = xrRequestExitSession(m_session);
+        if (XR_SUCCEEDED(result)) {
+            m_exitRequested = true;
+            Log::Write(Log::Level::Info, "EVA-VR exit requested");
+        } else {
+            Log::Write(Log::Level::Warning, Fmt("xrRequestExitSession failed: %s", to_string(result)));
+        }
+    }
+
     void PollActions() override {
+        if (m_application->isExitRequested()) RequestExit();
+        if (m_exitRequested) return;
         // Sync actions
         const XrActiveActionSet activeActionSet{m_input.actionSet, XR_NULL_PATH};
         XrActionsSyncInfo syncInfo{XR_TYPE_ACTIONS_SYNC_INFO};
@@ -1127,6 +1140,8 @@ struct OpenXrProgram : IOpenXrProgram {
                     applicationEvent.controllerEventBit |= CONTROLLER_EVENT_BIT_click_menu;
                     if(homeValue.currentState == XR_TRUE) {
                         applicationEvent.click_menu = true;
+                        RequestExit();
+                        return;
                     } else{
                         applicationEvent.click_menu = false;
                     }
@@ -1584,6 +1599,7 @@ struct OpenXrProgram : IOpenXrProgram {
     // Application's current lifecycle state according to the runtime
     XrSessionState m_sessionState{XR_SESSION_STATE_UNKNOWN};
     bool m_sessionRunning{false};
+    bool m_exitRequested{false};
 
     XrEventDataBuffer m_eventDataBuffer;
     InputState m_input;
