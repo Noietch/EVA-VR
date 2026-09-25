@@ -2,6 +2,7 @@ package org.eva.pico.input;
 
 import android.app.NativeActivity;
 import android.os.Bundle;
+import android.content.Intent;
 import android.content.res.AssetManager;
 import android.os.Handler;
 import android.os.Looper;
@@ -16,19 +17,49 @@ public class MainActivity extends NativeActivity {
     static { System.loadLibrary("openxr_loader"); System.loadLibrary("eva_pico"); }
     public native void setNativeAssetManager(AssetManager assetManager);
     private static final String TAG = "EVA-VR";
-    private static final String ADB_ENDPOINT = "ws://127.0.0.1:43876/ws?token=eva";
+    private static final String EXTRA_SERVER_URL = "server_url";
+    // Used when the launcher passes no `--es server_url`. Servers started with
+    // `--token-stdin` mint a random token per run, so the launcher must pass one.
+    private static final String DEFAULT_ENDPOINT = "ws://127.0.0.1:43876/ws?token=eva";
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final ArrayBlockingQueue<double[]> haptics = new ArrayBlockingQueue<>(16);
     private final OkHttpClient client = new OkHttpClient.Builder()
         .pingInterval(5, TimeUnit.SECONDS).build();
     private volatile WebSocket socket;
     private volatile boolean connected, resumed, focused = true;
-    private final String endpoint = ADB_ENDPOINT;
+    private volatile String endpoint = DEFAULT_ENDPOINT;
     private final Runnable reconnect = this::connect;
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
         setNativeAssetManager(getAssets());
+        endpoint = endpointFromIntent(getIntent());
+    }
+
+    // Accept the WebSocket endpoint the launcher passes through `am start`.
+    // Anything malformed falls back to the fixed adb-reverse default so the
+    // headset can never be left without a usable endpoint.
+    private String endpointFromIntent(Intent intent) {
+        String url = intent == null ? null : intent.getStringExtra(EXTRA_SERVER_URL);
+        if (url == null) return DEFAULT_ENDPOINT;
+        url = url.trim();
+        if (url.isEmpty()) return DEFAULT_ENDPOINT;
+        if (!url.startsWith("ws://") && !url.startsWith("wss://")) {
+            Log.w(TAG, "Ignoring non-WebSocket server_url");
+            return DEFAULT_ENDPOINT;
+        }
+        return url;
+    }
+
+    @Override protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        String next = endpointFromIntent(intent);
+        if (next.equals(endpoint)) return;
+        endpoint = next;
+        // The endpoint changed underneath a live socket; re-dial on the new one.
+        disconnect();
+        if (resumed) connect();
     }
     @Override protected void onResume() {
         super.onResume(); resumed = true;
